@@ -294,7 +294,8 @@ class App extends Component {
                             paper</a> as a guide.</p>
                     <div className="instructions">
                         <ul>
-                            <li>First start the tone "Play Tone" button.</li>
+                            <li>First lower the volume on your device, so it is not too loud to start.</li>
+                            <li>Start the tone by pressing the "Play Tone" button.</li>
                             <li>Adjust the frequency slider until it matches your tinnitus tone. You can also type in
                                 the frequency if you know it already.
                             </li>
