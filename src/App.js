@@ -28,12 +28,12 @@ class App extends Component {
         }
 
         // generate initial sequence
-        let newFreqs = this.generateSequence(localFreq);
+        let freqSeq = this.generateSequence();
 
         // setup initial state
         this.state = {
             freq: localFreq,
-            freqSeq: newFreqs,
+            freqSeq: freqSeq,
             volume: localVolume,
             playState: playerState,
             enableSlider: true,
@@ -65,7 +65,7 @@ class App extends Component {
         } else {
             return parseInt(localValue, 10);
         }
-    }
+    };
 
 
     componentDidMount = () => {
@@ -112,14 +112,13 @@ class App extends Component {
     };
 
     playAcrn = () => {
-        let {synth, freqSeq, freq, volume} = this.state;
-        Tone.Master.volume.rampTo(volume, 0.1);
+        let {synth, freqSeq, freq} = this.state;
         let seqCount = 0;
         let freqList = this.generateFreqs(freq);
-        let currentFreqList = []
+        let currentFreqList = [];
         let maxPatternLength = constants.LOOP_REPEAT * freqList.length;
         let newSequence = new Tone.Sequence((time, frequency) => {
-            seqCount++
+            seqCount++;
             if (seqCount < maxPatternLength) {
                 if (currentFreqList.length === 0) {
                     currentFreqList = this.shuffle(freqList.slice());
@@ -136,15 +135,16 @@ class App extends Component {
         this.setState({sequence: newSequence});
         newSequence.set({loop: true});
         newSequence.start(0);
-    }
+    };
 
     updatePlayState = (isPlaying, playState) => {
-        let {osc} = this.state;
+        let {osc, volume} = this.state;
         if (isPlaying) {
             switch (playState) {
                 case constants.PLAYER_STATES.PLAY_ACRN:
                     this.setState({playButtonText: constants.STOP_SEQ_TEXT,
                     enableSlider: false});
+                    Tone.Master.volume.rampTo(volume, 0.1);
                     this.playAcrn();
                     break;
                 case constants.PLAYER_STATES.PLAY_TONE:
@@ -180,7 +180,8 @@ class App extends Component {
             Math.floor(currentFreq * 1.09 + 52), Math.floor(currentFreq * 1.395 + 26.5)];
     };
 
-    generateSequence = (currentFreq) => {
+    generateSequence = () => {
+        // just needs to be the correct number of beats. Frequency content is ignored.
         let freqSeq = [];
 
         // can all be empty since tones are geneated during loop play
