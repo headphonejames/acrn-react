@@ -291,10 +291,10 @@ class App extends Component {
                         <h1 className="App-title">ACRN Tinnitus Protocol</h1>
                     </div>
                     <p>This is my attempt at implementing the <a
-                        href="http://www.tinnitus.org.uk/acoustic-cr-neuromodulation">Acoustic Coordinated Reset
+                        href="https://www.thetinnitusclinic.co.uk/tinnitus-treatment/acoustic-neuromodulation/">Acoustic Coordinated Reset
                         Neuromodulation</a> tinnitus treatment protocol
                         using <a
-                            href="http://www.thetinnitusclinic.co.uk/downloads/Tass%20et%20al_RNN%202012_Counteracting%20Tinnitus%20by%20Acoustic%20CR%20Neuromodulation.pdf">this
+                            href="https://www.tinnitustalk.com/attachments/tass-et-al_rnn-2012_counteracting-tinnitus-by-acoustic-cr-neuromodulation-pdf.183/">this
                             paper</a> as a guide.</p>
                     <div className="instructions">
                         <ul>
