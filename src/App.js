@@ -20,6 +20,12 @@ class App extends Component {
         // use local storage for volume and frequency
         let localVolume = this.getLocalStorageInt(constants.VOLUME_KEY, constants.DEFAULT_VOLUME);
         let localFreq = this.getLocalStorageInt(constants.FREQ_KEY, constants.DEFAULT_FREQ);
+        let playerState = this.getLocalStorageInt(constants.PLAYER_STATE_KEY, constants.PLAYER_STATES.PLAY_TONE);
+
+        let buttonText = constants.PLAY_TONE_TEXT;
+        if (playerState === constants.PLAYER_STATES.PLAY_ACRN) {
+            buttonText = constants.PLAY_SEQ_TEXT;
+        }
 
         // generate initial sequence
         let newFreqs = this.generateSequence(localFreq);
@@ -29,20 +35,22 @@ class App extends Component {
             freq: localFreq,
             freqSeq: newFreqs,
             volume: localVolume,
-            playState: constants.PLAYER_STATES.PLAY_TONE,
+            playState: playerState,
             enableSlider: true,
             isPlaying: false,
             userStarted: false,
-            playButtonText: constants.PLAY_TONE_TEXT,
+            playButtonText: buttonText,
+            restCount: 0,
             synth: new Tone.MonoSynth({
                 "volume": 0.05,
                 "oscillator": {
                     "type": "sine"
                 },
                 "envelope": {
-                    "attack": 0.3,
-                    "decay": 0.3,
-                    "release": 0.1,
+                    "attack": 0.08,
+                    "decay": 0.12,
+                    "sustain": 0.25,
+                    "release": 0.2,
                 }
             }).toMaster(),
             osc: new Tone.Oscillator({
@@ -58,7 +66,8 @@ class App extends Component {
         } else {
             return parseInt(localValue, 10);
         }
-    };
+    }
+
 
     componentDidMount = () => {
         //set the bpm and initialize sound context
@@ -101,18 +110,37 @@ class App extends Component {
         this.setState({isPlaying: !isPlaying});
     };
 
+    playAcrn = () => {
+        let {restCount, synth, freqSeq, freq} = this.state;
+        let newSequence = new Tone.Sequence((time, frequencies) => {
+            synth.triggerAttackRelease(frequencies, "4n", "+0.1");
+            if (frequencies === 0) {
+                restCount++;
+                if (restCount === 4) {
+                    let newFreqs = this.generateSequence(freq);
+                    this.setState({
+                        freqSeq: newFreqs,
+                        restCount: 0
+                    });
+                    Tone.Transport.stop();
+                    this.playAcrn();
+                }
+            }
+        }, freqSeq);
+        this.setState({sequence: newSequence});
+        newSequence.start(0);
+        newSequence.set({loop: false});
+        Tone.Transport.start("+0.1");
+    }
+
     updatePlayState = (isPlaying, playState) => {
-        let {freqSeq, synth, osc} = this.state;
+        let {osc} = this.state;
         if (isPlaying) {
             switch (playState) {
                 case constants.PLAYER_STATES.PLAY_ACRN:
-                    this.setState({playButtonText: constants.STOP_SEQ_TEXT});
-                    let newSequence = new Tone.Sequence((time, freq) => {
-                        synth.triggerAttackRelease(freq, "4n", "+0.1");
-                    }, freqSeq);
-                    this.setState({sequence: newSequence, enableSlider: false});
-                    newSequence.start(0);
-                    Tone.Transport.start("+0.1");
+                    this.setState({playButtonText: constants.STOP_SEQ_TEXT,
+                    enableSlider: false});
+                    this.playAcrn();
                     break;
                 case constants.PLAYER_STATES.PLAY_TONE:
                     this.setState({playButtonText: constants.STOP_TONE_TEXT});
@@ -210,7 +238,7 @@ class App extends Component {
             // start the new sound
             this.updatePlayState(true, newPlayState);
         }
-
+        localStorage.setItem(constants.PLAYER_STATE_KEY, newPlayState);
     };
 
     handleVolumeChange = (event) => {
@@ -239,9 +267,8 @@ class App extends Component {
 
 
     render = () => {
-        let {freq, enableSlider, volume, playButtonText} = this.state;
+        let {freq, enableSlider, volume, playButtonText, playState} = this.state;
         return (
-            <body>
             <div className="App">
                 <nav className="navbar navbar-default">
                     <div className="container">
@@ -280,49 +307,45 @@ class App extends Component {
                             href="http://www.reddit.com/r/tinnitus/comments/15x99f/recent_tinnitus_study_and_my_attempt_at_utilizing/">this</a> reddit thread.</p>
                     <br/>
                     <div>
-                        <p>
-                            <ToggleButtonGroup type="radio" name="options"
-                                               defaultValue={constants.PLAYER_STATES.PLAY_TONE}
-                                               onChange={this.handleRadioChange}>
-                                <ToggleButton value={constants.PLAYER_STATES.PLAY_TONE}>Tone</ToggleButton>
-                                <ToggleButton value={constants.PLAYER_STATES.PLAY_ACRN}>Sequence</ToggleButton>
-                            </ToggleButtonGroup>
-                        </p>
-                        <p>
-                            <div className='slider'>
-                                Frequency
-                                <Slider
-                                    min={constants.MIN_FREQ}
-                                    max={constants.MAX_FREQ}
-                                    value={freq}
-                                    onChange={this.handleFreqChange}
-                                    handle={this.freqSliderTooltip}
-                                    disabled={!enableSlider}
-                                />
-                            </div>
-                            <div>
-                                <input className='freq-value' onChange={this.handleTextFreqChange} value={freq}/>
-                            </div>
-                        </p>
+                        <ToggleButtonGroup type="radio" name="options"
+                                           defaultValue={playState}
+                                           onChange={this.handleRadioChange}>
+                            <ToggleButton value={constants.PLAYER_STATES.PLAY_TONE}>Tone</ToggleButton>
+                            <ToggleButton value={constants.PLAYER_STATES.PLAY_ACRN}>Sequence</ToggleButton>
+                        </ToggleButtonGroup>
+                        <br/>
+                        <br/>
+                        <div className='slider'>
+                            Frequency
+                            <Slider
+                                min={constants.MIN_FREQ}
+                                max={constants.MAX_FREQ}
+                                value={freq}
+                                onChange={this.handleFreqChange}
+                                handle={this.freqSliderTooltip}
+                                disabled={!enableSlider}
+                            />
+                        </div>
+                        <div>
+                            <input className='freq-value' onChange={this.handleTextFreqChange} value={freq}/>
+                        </div>
+                        <br/>
                         <p>
                             <Button className='btn-success btn-lg'
                                     onClick={this.handleClickPlay}>{playButtonText}</Button>
                         </p>
-                        <p>
-                            <div className='slider volume'>
-                                Volume
-                                <Slider
-                                    min={-80}
-                                    max={0}
-                                    value={volume}
-                                    onChange={this.handleVolumeChange}
-                                />
-                            </div>
-                        </p>
+                        <div className='slider volume'>
+                            Volume
+                            <Slider
+                                min={-80}
+                                max={0}
+                                value={volume}
+                                onChange={this.handleVolumeChange}
+                            />
+                        </div>
                     </div>
                 </div>
             </div>
-            </body>
         );
     }
 }

@@ -1,6 +1,6 @@
 {
   "name": "acrn",
-  "homepage": "http://www.generalfuzz.net/acrn-react",
+  "homepage": "http://www.generalfuzz.net/acrn",
   "version": "0.1.0",
   "private": true,
   "devDependencies": {
