@@ -14,6 +14,9 @@ export const PLAYER_STATE_KEY = "playerState";
 export const DEFAULT_FREQ = 1000;
 export const DEFAULT_VOLUME = -10;
 
+export const LOOP_REPEAT = 4;
+export const REST_LENGTH = 4;
+
 // constants
 export const PLAYER_STATES = {
     PLAY_TONE: 0,

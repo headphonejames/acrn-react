@@ -40,17 +40,16 @@ class App extends Component {
             isPlaying: false,
             userStarted: false,
             playButtonText: buttonText,
-            restCount: 0,
             synth: new Tone.MonoSynth({
-                "volume": 0.05,
                 "oscillator": {
                     "type": "sine"
                 },
+                "portamento": 0.002,
                 "envelope": {
-                    "attack": 0.15,
-                    "decay": 0.12,
-                    "sustain": 0.25,
-                    "release": 0.2,
+                    "attack": 0.12,
+                    "decay": 0.04,
+                    "sustain": 0.085,
+                    "release": 0.12,
                 }
             }).toMaster(),
             osc: new Tone.Oscillator({
@@ -102,35 +101,41 @@ class App extends Component {
     handleClickPlay = () => {
         let {isPlaying, volume, playState} = this.state;
         if (!isPlaying) {
+            Tone.Transport.start();
             Tone.Master.volume.rampTo(volume, 0.05);
         } else {
             Tone.Master.volume.rampTo(-Infinity, 0.05);
+            Tone.Transport.stop();
         }
         this.updatePlayState(!isPlaying, playState);
         this.setState({isPlaying: !isPlaying});
     };
 
     playAcrn = () => {
-        let {restCount, synth, freqSeq, freq} = this.state;
-        let newSequence = new Tone.Sequence((time, frequencies) => {
-            synth.triggerAttackRelease(frequencies, "4n", "+0.1");
-            if (frequencies === 0) {
-                restCount++;
-                if (restCount === 4) {
-                    let newFreqs = this.generateSequence(freq);
-                    this.setState({
-                        freqSeq: newFreqs,
-                        restCount: 0
-                    });
-                    Tone.Transport.stop();
-                    this.playAcrn();
+        let {synth, freqSeq, freq, volume} = this.state;
+        Tone.Master.volume.rampTo(volume, 0.1);
+        let seqCount = 0;
+        let freqList = this.generateFreqs(freq);
+        let currentFreqList = []
+        let maxPatternLength = constants.LOOP_REPEAT * freqList.length;
+        let newSequence = new Tone.Sequence((time, frequency) => {
+            seqCount++
+            if (seqCount < maxPatternLength) {
+                if (currentFreqList.length === 0) {
+                    currentFreqList = this.shuffle(freqList.slice());
+                }
+                synth.triggerAttackRelease(currentFreqList.pop(), "4n");
+            } else {
+                if (seqCount < maxPatternLength + constants.REST_LENGTH) {
+                    // do nothing
+                } else {
+                    seqCount = 0;
                 }
             }
         }, freqSeq);
         this.setState({sequence: newSequence});
+        newSequence.set({loop: true});
         newSequence.start(0);
-        newSequence.set({loop: false});
-        Tone.Transport.start("+0.1");
     }
 
     updatePlayState = (isPlaying, playState) => {
@@ -157,7 +162,6 @@ class App extends Component {
                     let {sequence} = this.state;
                     sequence.cancel();
                     sequence.dispose();
-                    Tone.Transport.stop();
                     this.setState({enableSlider: true});
 
                     break;
@@ -179,13 +183,13 @@ class App extends Component {
     generateSequence = (currentFreq) => {
         let freqSeq = [];
 
-        let freqMap = this.generateFreqs(currentFreq);
-
-        for (let i = 0; i < 4; i++) {
-            let s = this.shuffle(freqMap.slice());
-            freqSeq.push(...s);
+        // can all be empty since tones are geneated during loop play
+        for (let i = 0; i < constants.LOOP_REPEAT; i++) {
+            freqSeq.push(...[0,0,0,0]);
         }
-        freqSeq.push(...[0, 0, 0, 0]);
+        for (let i = 0; i < constants.REST_LENGTH; i++) {
+            freqSeq.push([0]);
+        }
         return freqSeq;
     };
 
