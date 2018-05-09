@@ -12,7 +12,7 @@ export const PLAYER_STATE_KEY = "playerState";
 
 // initial config values
 export const DEFAULT_FREQ = 1000;
-export const DEFAULT_VOLUME = -5;
+export const DEFAULT_VOLUME = -10;
 
 // constants
 export const PLAYER_STATES = {
