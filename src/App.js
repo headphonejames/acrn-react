@@ -47,7 +47,7 @@ class App extends Component {
                     "type": "sine"
                 },
                 "envelope": {
-                    "attack": 0.08,
+                    "attack": 0.15,
                     "decay": 0.12,
                     "sustain": 0.25,
                     "release": 0.2,
