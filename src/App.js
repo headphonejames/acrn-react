@@ -40,16 +40,15 @@ class App extends Component {
             isPlaying: false,
             userStarted: false,
             playButtonText: buttonText,
-            synth: new Tone.MonoSynth({
+            synth: new Tone.PolySynth(6, Tone.Synth, {
                 "oscillator": {
                     "type": "sine"
                 },
-                "portamento": 0.002,
                 "envelope": {
-                    "attack": 0.12,
-                    "decay": 0.04,
-                    "sustain": 0.085,
-                    "release": 0.12,
+                    "attack": 0.1,
+                    "decay": 0.00,
+                    "sustain": 0.07,
+                    "release": 0.08,
                 }
             }).toMaster(),
             osc: new Tone.Oscillator({
@@ -188,7 +187,7 @@ class App extends Component {
         for (let i = 0; i < constants.LOOP_REPEAT; i++) {
             freqSeq.push(...[0,0,0,0]);
         }
-        for (let i = 0; i < constants.REST_LENGTH; i++) {
+        for (let i = 0; i < constants.REST_LENGTH + 1; i++) {
             freqSeq.push([0]);
         }
         return freqSeq;
