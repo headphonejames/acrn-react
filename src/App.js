@@ -334,6 +334,12 @@ class App extends Component {
                         <div>
                             <input className='freq-value' onChange={this.handleTextFreqChange} value={freq}/>
                         </div>
+                        {playState == constants.PLAYER_STATES.PLAY_ACRN &&
+                        <div>
+                            <br/>
+                            <i>frequencies used in sequence: {this.generateFreqs(freq).map((value, index) => ((index ? ', ' : '') + value))}</i>
+                        </div>
+                        }
                         <br/>
                         <p>
                             <Button className='btn-success btn-lg'
